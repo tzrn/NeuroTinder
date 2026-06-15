@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>NeuroTinder</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <h1>NeuroTinder</h1>
+    <p id="welcome">Привет, {{username}}</p>
+
+    <div class="bots">
+        {% for bot in bots %}
+        <div class="bot">
+            <h2>{{bot.name}}</h2>
+            <img class="bigpfp" src="/static/img/pfp/{{bot.pfp}}">
+            <a href="/chat?id={{bot.id}}">Написать</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if has_more %}
+    <a href="/home?page={{page+1}}">Дальше</a>
+    {%else%}
+    <a href="/home?page=1">Дальше</a>
+    {% endif %}
+</body>
+
+</html>

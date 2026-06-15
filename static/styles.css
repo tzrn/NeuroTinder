@@ -1,0 +1,11 @@
+.bots {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.bigpfp {
+    height: 300px;
+    width: 200px;
+    display: block;
+}

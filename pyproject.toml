@@ -1,0 +1,9 @@
+[project]
+name="NeuroTinder"
+version="0.0.1"
+dependencies = [
+    "bcrypt>=5.0.0",
+    "fastapi[standard]>=0.137.0",
+    "jinja2>=3.1.6",
+    "peewee>=4.0.8",
+]
