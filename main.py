@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 
 from typing import Annotated
 
+import ollama
 import bcrypt
 import secrets
 import json
@@ -100,6 +101,35 @@ async def read_item(
     )
 
 
+def get_messages(user, bot):
+    return (
+        models.Message.select()
+        .where(
+            (models.Message.user1 == user) & (models.Message.user2 == bot)
+            | (models.Message.user1 == bot) & (models.Message.user2 == user)
+        )
+        .order_by(models.Message.id)
+    )
+
+
+def context(user, bot):
+    msgs = get_messages(user, bot)
+    context = [
+        {
+            "role": "system",
+            "content": f"You're {bot.age} year old woman. Replies must be short.",
+        }
+    ]
+    for m in msgs:
+        context.append(
+            {
+                "role": "assistant" if m.user1 == bot else "user",
+                "content": m.contents,
+            }
+        )
+    return context
+
+
 @app.get("/chat/{username}")
 async def chat(request: Request, username: str):
     user = auth(request.cookies)
@@ -110,14 +140,7 @@ async def chat(request: Request, username: str):
     if not bot:
         return error("Пользователь не найден")
 
-    messages = (
-        models.Message.select()
-        .where(
-            (models.Message.user1 == user) & (models.Message.user2 == bot)
-            | (models.Message.user1 == bot) & (models.Message.user2 == user)
-        )
-        .order_by(models.Message.id)
-    )
+    messages = get_messages(user, bot)
 
     return templates.TemplateResponse(
         request=request,
@@ -127,6 +150,23 @@ async def chat(request: Request, username: str):
 
 
 sockets = {}
+
+
+async def reply(ws, context, user, bot):
+    resp = ollama.chat(
+        model="qwen3.5:0.8b",
+        messages=context,
+        think=False,
+        options={
+            "num_predict": 20,
+            "num_ctx": 512,
+            "temperature": 0.7,
+        },
+    )["message"]["content"]
+    print(resp)
+    msg = '{"contents":"' + resp + '"}'
+    models.Message.create(contents=resp, user1=bot, user2=user)
+    await ws.send_text(msg)
 
 
 @app.websocket("/chatws")
@@ -145,6 +185,8 @@ async def websocket_endpoint(websocket: WebSocket):
     if not bot:
         return error("Пользователь не найден")
 
+    ctx = context(user, bot)
+
     while True:
         data = await websocket.receive_text()
         try:
@@ -157,11 +199,15 @@ async def websocket_endpoint(websocket: WebSocket):
 
         contents = j["contents"]
         models.Message.create(contents=contents, user1=user, user2=bot)
+        ctx.append(
+            {
+                "role": "user",
+                "content": contents,
+            }
+        )
 
         if bot.id in sockets:
             await sockets[bot.id].send_json({"contents": contents})
 
-        if bot.isbot:  # TODO: LLM
-            msg = '{"contents":"Классно"}'
-            models.Message.create(contents="Классно", user1=bot, user2=user)
-            await websocket.send_text(msg)
+        if bot.isbot:
+            await reply(websocket, ctx, user, bot)
