@@ -7,24 +7,42 @@
 </head>
 
 <body>
-    <h1>NeuroTinder</h1>
-    <p id="welcome">Привет, {{username}}</p>
+    <div class="header">
+        <h1 style="flex:1">NeuroTinder</h1>
+        <div style="text-align: center;">
+            <p id="welcome">Привет, {{username}}</p>
+            <button onclick="logout()">Выход</button>
+        </div>
+    </div>
 
     <div class="bots">
         {% for bot in bots %}
         <div class="bot">
             <h2>{{bot.name}}</h2>
             <img class="bigpfp" src="/static/img/pfp/{{bot.pfp}}">
-            <a href="/chat?id={{bot.id}}">Написать</a>
+            <p>Возраст: {{bot.age}}</p>
+            <p><i>{{bot.bio}}</i></p>
+            <a href="/chat/{{bot.name}}">Написать</a>
         </div>
         {% endfor %}
+
+        <div class="bot" style="height:100px;width:100px;">
+            {% if has_more %}
+            <a href="/home?page={{page+1}}">Дальше</a>
+            {%else%}
+            <a href="/home?page=1">Дальше</a>
+            {% endif %}
+        </div>
     </div>
 
-    {% if has_more %}
-    <a href="/home?page={{page+1}}">Дальше</a>
-    {%else%}
-    <a href="/home?page=1">Дальше</a>
-    {% endif %}
+    <script src="/static/js/tools.js"></script>
+    <script>
+        function logout() {
+            del_cookie("username")
+            del_cookie("session")
+            window.location.href = "/";
+        }
+    </script>
 </body>
 
 </html>

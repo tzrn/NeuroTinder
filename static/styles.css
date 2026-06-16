@@ -1,11 +1,66 @@
+* {
+    padding: 0;
+    margin: 0;
+}
+
 .bots {
     display: flex;
-    gap: 20px;
+    gap: 40px;
     justify-content: center;
+    align-items: center;
+    margin: 10px;
+}
+
+.bot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: white;
+    border: 3px solid lightgrey;
+    border-radius: 10px;
+    width: 25%;
 }
 
 .bigpfp {
     height: 300px;
     width: 200px;
     display: block;
+}
+
+.header {
+    display: flex;
+    justify-content: center;
+    background-color: peachpuff;
+    width: 100%;
+}
+
+@font-face {
+    font-family: "MyFont";
+    src: url("/static/OpenDyslexic-Regular.otf") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: "MyFont", sans-serif;
+    background-color: blanchedalmond;
+}
+
+.chat {
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: auto;
+    height: 100vh;
+}
+
+.messages {
+    flex: 1;
+    background-color: white;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
 }

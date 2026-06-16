@@ -21,10 +21,11 @@ class User(Model):
 
 class Message(Model):
     contents = pw.TextField()
-    pic = pw.TextField()  # uri прикрепленной картики если такова имеется
-    user = pw.ForeignKeyField(User, backref="msgs")
+    pic = pw.TextField(null=True)  # uri прикрепленной картики если такова имеется
+    user1 = pw.ForeignKeyField(User)
+    user2 = pw.ForeignKeyField(User)
     timestamp = pw.DateTimeField(default=datetime.datetime.now, index=True)
 
 
 db.connect()
-db.create_tables([User])
+db.create_tables([User, Message])

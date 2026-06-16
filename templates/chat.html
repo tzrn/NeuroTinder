@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>NeuroTinder</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div class="chat">
+        <div class="header">
+            <h1>{{bot.name}}</h1>
+        </div>
+
+        <div id="messages" class="messages">
+            {% for m in messages %}
+            <p>
+                {% if m.user1.id==bot.id %}
+                {{bot.name}}:
+                {% else %}
+                вы:
+                {% endif %}
+                {{m.contents}}
+            </p>
+            {% endfor %}
+        </div>
+
+        <form id="msgform">
+            <input id="msginput">
+            <input type="submit" value="Отправить">
+        </form>
+    </div>
+
+    <script src="/static/js/tools.js"></script>
+    <script>
+        const ws = new WebSocket("/chatws");
+        botname = "{{bot.name}}"
+
+        ws.onopen = () => {
+            ws.send(botname);
+        };
+
+        function message(contents, isuser) {
+            return `<p>${isuser ? "Вы" : botname}: ${contents}</p>`
+        }
+
+        messages = $('messages')
+        ws.onmessage = (event) => {
+            j = JSON.parse(event.data)
+            messages.innerHTML += message(j.contents, false)
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        $('msgform').addEventListener('submit', function (e) {
+            e.preventDefault();
+            ws.send(JSON.stringify({
+                "contents": msginput.value
+            }))
+            messages.innerHTML += message(msginput.value, true)
+            msginput.value = ''
+            messages.scrollTop = messages.scrollHeight;
+        });
+    </script>
+
+</body>
+
+</html>

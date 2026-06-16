@@ -9,6 +9,10 @@ function cookie(name) {
     return null;
 }
 
+function del_cookie(name) {
+    document.cookie = `${name}=; max-age=0; path=/;`;
+}
+
 function $(id) {
     return document.getElementById(id)
 }
