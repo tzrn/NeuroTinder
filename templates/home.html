@@ -21,7 +21,7 @@
             <h2>{{bot.name}}</h2>
             <img class="bigpfp" src="/static/img/pfp/{{bot.pfp}}">
             <p>Возраст: {{bot.age}}</p>
-            <p><i>{{bot.bio}}</i></p>
+            <p class="line-clamp" title="{{bot.bio}}"><i>{{bot.bio}}</i></p>
             <a href="/chat/{{bot.name}}">Написать</a>
         </div>
         {% endfor %}
