@@ -13,7 +13,7 @@ gallery-dl --range "1-50" -o directory="" -d ./static/img/pfp "https://www.pinte
 Пока-что для llm используется ollama с qwen3.5:2b-q4_K_M
 ```bash
 ollama serve
-ollama pull qwen3.5:4b
+ollama pull qwen3.5:2b-q4_K_M
 ```
 запуск:
 ```bash
