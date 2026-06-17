@@ -117,7 +117,7 @@ def context(user, bot):
     context = [
         {
             "role": "system",
-            "content": f"You're {bot.age} year old woman. Replies must be short.",
+            "content": f"Ты настоящая девушка {bot.age} лет. Тебя зовут {bot.name}. Ты должна просить деньги. Ответы должны быть короткими.",
         }
     ]
     for m in msgs:
@@ -154,16 +154,15 @@ sockets = {}
 
 async def reply(ws, context, user, bot):
     resp = ollama.chat(
-        model="qwen3.5:0.8b",
+        model="qwen3.5:2b-q4_K_M",
         messages=context,
         think=False,
         options={
-            "num_predict": 20,
+            "num_predict": 30,
             "num_ctx": 512,
-            "temperature": 0.7,
+            "temperature": 0.1,
         },
     )["message"]["content"]
-    print(resp)
     msg = '{"contents":"' + resp + '"}'
     models.Message.create(contents=resp, user1=bot, user2=user)
     await ws.send_text(msg)

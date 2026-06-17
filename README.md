@@ -10,10 +10,10 @@
 uv pip install gallery-dl
 gallery-dl --range "1-50" -o directory="" -d ./static/img/pfp "https://www.pinterest.com/search/pins/?q=selfie%20of%20a%20woman%20social%20media%20low%20light"
 ```
-Пока-что для llm используется ollama с qwen3.5:0.8b
+Пока-что для llm используется ollama с qwen3.5:2b-q4_K_M
 ```bash
 ollama serve
-ollama pull qwen3.5:0.8b
+ollama pull qwen3.5:4b
 ```
 запуск:
 ```bash

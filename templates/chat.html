@@ -17,9 +17,9 @@
             {% for m in messages %}
             <p>
                 {% if m.user1.id==bot.id %}
-                {{bot.name}}:
+                <b style="color:crimson">{{bot.name}}:</b>
                 {% else %}
-                вы:
+                <b style="color:darkmagenta">вы:</b>
                 {% endif %}
                 {{m.contents}}
             </p>
@@ -42,7 +42,8 @@
         };
 
         function message(contents, isuser) {
-            return `<p>${isuser ? "Вы" : botname}: ${contents}</p>`
+            return `<p>${isuser ? "<b style=\"color:darkmagenta\">вы</b>" : `<b style="color:crimson">${botname}</b>`
+                }: ${contents}</p >`
         }
 
         messages = $('messages')
