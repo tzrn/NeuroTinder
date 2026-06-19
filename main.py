@@ -31,7 +31,7 @@ def error(msg):
     return {"error": msg}
 
 
-def verify(name, password, hash):
+def verify(password, hash):
     return bcrypt.checkpw(password.encode("utf-8"), hash.encode("utf-8"))
 
 
@@ -54,7 +54,7 @@ async def login(
 ):
     user = models.User.get_or_none(models.User.name == username)
 
-    if not user or user.isbot or not verify(username, password, user.password):
+    if not user or user.isbot or not verify(password, user.password):
         return error("Неверный логин или пароль")
 
     session = secrets.token_urlsafe(32)
@@ -216,7 +216,9 @@ async def websocket_endpoint(websocket: WebSocket):
     bot_username = await websocket.receive_text()
     bot = models.User.get_or_none(models.User.name == bot_username)
     if not bot:
-        return error("Пользователь не найден")
+        websocket.send_text(error("ошибка авторизации"))
+        websocket.close()
+        return
 
     ctx = context(user, bot)
 
