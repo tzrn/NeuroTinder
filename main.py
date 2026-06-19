@@ -1,4 +1,12 @@
-from fastapi import FastAPI, Request, Form, Response, Query, WebSocket
+from fastapi import (
+    FastAPI,
+    Request,
+    Form,
+    Response,
+    Query,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -168,6 +176,32 @@ async def reply(ws, context, user, bot):
     await ws.send_text(msg)
 
 
+async def handle_socket(ws, user, bot, ctx):
+    data = await ws.receive_text()
+    try:
+        j = json.loads(data)
+    except json.decoder.JSONDecodeError:
+        return
+
+    if "contents" not in j:
+        return
+
+    contents = j["contents"]
+    models.Message.create(contents=contents, user1=user, user2=bot)
+    ctx.append(
+        {
+            "role": "user",
+            "content": contents,
+        }
+    )
+
+    if bot.id in sockets:
+        await sockets[bot.id].send_json({"contents": contents})
+
+    if bot.isbot:
+        await reply(ws, ctx, user, bot)
+
+
 @app.websocket("/chatws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -187,26 +221,9 @@ async def websocket_endpoint(websocket: WebSocket):
     ctx = context(user, bot)
 
     while True:
-        data = await websocket.receive_text()
         try:
-            j = json.loads(data)
-        except json.decoder.JSONDecodeError:
-            continue
-
-        if "contents" not in j:
-            continue
-
-        contents = j["contents"]
-        models.Message.create(contents=contents, user1=user, user2=bot)
-        ctx.append(
-            {
-                "role": "user",
-                "content": contents,
-            }
-        )
-
-        if bot.id in sockets:
-            await sockets[bot.id].send_json({"contents": contents})
-
-        if bot.isbot:
-            await reply(websocket, ctx, user, bot)
+            await handle_socket(websocket, user, bot, ctx)
+        except:
+            print("deleting connection")
+            del sockets[user.id]
+            return

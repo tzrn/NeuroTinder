@@ -80,3 +80,10 @@ body {
     border-radius: 20px;
     margin: 5px;
 }
+
+.login {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    max-width: 200px;
+}

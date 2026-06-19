@@ -3,14 +3,18 @@
 
 <head>
     <title>register</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
-    <h1>РЕГИСТРАЦИЯ</h1>
-    <form METHOD="POST" action="/register">
+    <div class="header">
+        <h1>РЕГИСТРАЦИЯ</h1>
+    </div>
+
+    <form class="login" METHOD="POST" action="/register">
         Логин: <input name="username">
         Пароль: <input name="password" type="password">
-        <input type="submit">
+        <input type="submit" value="зарегистрироваться">
     </form>
 </body>
 

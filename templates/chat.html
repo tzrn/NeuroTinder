@@ -34,12 +34,26 @@
 
     <script src="/static/js/tools.js"></script>
     <script>
-        const ws = new WebSocket("/chatws");
         botname = "{{bot.name}}"
 
-        ws.onopen = () => {
-            ws.send(botname);
-        };
+        function connect() {
+            ws = new WebSocket("/chatws");
+            ws.onopen = () => {
+                ws.send(botname);
+            };
+
+            ws.onclose = () => {
+                setTimeout(() => {
+                    console.log("Попытка восстановить соединение...")
+                    connect()
+                }, 2000)
+            }
+
+            ws.onerror = (err) => {
+                ws.close();
+            };
+        }
+        connect()
 
         function message(contents, isuser) {
             return `<p>${isuser ? "<b style=\"color:darkmagenta\">вы</b>" : `<b style="color:crimson">${botname}</b>`

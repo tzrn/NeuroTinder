@@ -3,16 +3,19 @@
 
 <head>
     <title>login</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
-    <h1>ВХОД</h1>
-    <form METHOD="POST" action="/login">
+    <div class="header">
+        <h1>ВХОД</h1>
+    </div>
+    <form class="login" METHOD="POST" action="/login">
         Логин: <input name="username">
         Пароль: <input name="password" type="password">
-        <input type="submit">
+        <input type="submit" value="войти">
+        <a href="/static/html/register.html">Создать аккаунт</a>
     </form>
-    <p><a href="/static/html/register.html">Создать аккаунт</a></p>
 </body>
 
 </html>
