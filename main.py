@@ -216,7 +216,7 @@ async def websocket_endpoint(websocket: WebSocket):
     bot_username = await websocket.receive_text()
     bot = models.User.get_or_none(models.User.name == bot_username)
     if not bot:
-        websocket.send_text(error("ошибка авторизации"))
+        websocket.send_text(error("пользователь не найден"))
         websocket.close()
         return
 
