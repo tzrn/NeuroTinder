@@ -17,6 +17,8 @@ class User(Model):
     password = pw.TextField(null=True)  # хэш
     session = pw.TextField(null=True)
     isbot = pw.BooleanField()
+    prefagefrom = pw.IntegerField(null=True)
+    prefageto = pw.IntegerField(null=True)
 
 
 class Message(Model):

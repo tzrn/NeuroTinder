@@ -11,9 +11,16 @@
         <h1>РЕГИСТРАЦИЯ</h1>
     </div>
 
-    <form class="login" METHOD="POST" action="/register">
-        Логин: <input name="username">
-        Пароль: <input name="password" type="password">
+    <form class="login" METHOD="POST" action="/register" enctype="multipart/form-data">
+        Логин:<input name="username">
+        Пароль:<input name="password" type="password">
+        <hr>
+        <span>Ваш возраст</span>
+        <input type="number" min="18" max="130" name="age">
+        Аватарка:<input name="pfp" type="file">
+        <span>Предпочитаемый возраст</span>
+        От:<input type="number" name="prefagefrom">
+        До:<input type="number" name="prefageto">
         <input type="submit" value="зарегистрироваться">
     </form>
 </body>

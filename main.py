@@ -1,12 +1,4 @@
-from fastapi import (
-    FastAPI,
-    Request,
-    Form,
-    Response,
-    Query,
-    WebSocket,
-    WebSocketDisconnect,
-)
+from fastapi import FastAPI, Request, Form, Response, Query, WebSocket, File, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -18,6 +10,7 @@ import bcrypt
 import secrets
 import json
 import models
+import uuid
 
 
 app = FastAPI()
@@ -68,15 +61,29 @@ async def login(
 
 
 @app.post("/register")
-async def register(username: Annotated[str, Form()], password: Annotated[str, Form()]):
+async def register(
+    username: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+    prefagefrom: Annotated[int, Form()],
+    prefageto: Annotated[int, Form()],
+    age: Annotated[int, Form(ge=18, le=130)],
+    pfp: Annotated[UploadFile, File()],
+):
     user = models.User.get_or_none(models.User.name == username)
     if user:
         return error("Это имя уже занято")
+
+    pfp_filename = uuid.uuid4()
+    with open(f"./static/img/pfp/{pfp_filename}", "wb") as f:
+        f.write(await pfp.read())
 
     models.User.create(
         name=username,
         password=bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()),
         isbot=False,
+        prefagefrom=prefagefrom,
+        prefageto=prefageto,
+        pfp=pfp_filename,
     )
     return RedirectResponse(url="/static/html/login.html", status_code=302)
 
@@ -92,6 +99,9 @@ async def read_item(
     bots = list(
         models.User.select()
         .where(models.User.isbot)
+        .where(
+            (models.User.age > user.prefagefrom) & (models.User.age < user.prefageto)
+        )
         .limit(limit + 1)
         .offset((page - 1) * limit)
     )
@@ -102,6 +112,7 @@ async def read_item(
         name="home.html",
         context={
             "username": user.name,
+            "pfp": user.pfp,
             "bots": bots[:limit],
             "page": page,
             "has_more": len(bots) == limit + 1,
