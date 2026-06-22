@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from pydantic import StringConstraints
 from typing import Annotated
 
 import ollama
@@ -62,8 +63,8 @@ async def login(
 
 @app.post("/register")
 async def register(
-    username: Annotated[str, Form()],
-    password: Annotated[str, Form()],
+    username: Annotated[str, Form(), StringConstraints(min_length=2, max_length=15)],
+    password: Annotated[str, Form(), StringConstraints(min_length=4, max_length=40)],
     prefagefrom: Annotated[int, Form()],
     prefageto: Annotated[int, Form()],
     age: Annotated[int, Form(ge=18, le=130)],
