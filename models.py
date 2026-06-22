@@ -23,7 +23,7 @@ class User(Model):
 
 class Message(Model):
     contents = pw.TextField()
-    pic = pw.TextField(null=True)  # uri прикрепленной картики если такова имеется
+    audio = pw.TextField(null=True)  # uri
     user1 = pw.ForeignKeyField(User)
     user2 = pw.ForeignKeyField(User)
     timestamp = pw.DateTimeField(default=datetime.datetime.now, index=True)

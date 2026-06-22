@@ -426,7 +426,7 @@ def bio(name, age):
 
 def nickname():
     s = ""
-    for i in range(random.randint(1, 3)):
+    for i in range(random.randint(2, 3)):
         s += random.choice(
             [
                 "void",

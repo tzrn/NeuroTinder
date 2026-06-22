@@ -15,7 +15,12 @@ import models
 import uuid
 import peewee
 import asyncio
+import random
 
+from piper import PiperVoice
+import wave
+
+voice = PiperVoice.load("./models/ru_RU-irina-medium.onnx")
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 redir_login = RedirectResponse(url="/static/html/login.html", status_code=302)
@@ -187,7 +192,7 @@ def context(user, bot):
     context = [
         {
             "role": "system",
-            "content": f"Ты настоящая девушка {bot.age} лет. Тебя зовут {bot.name}. Ты должна просить деньги. Ответы должны быть короткими.",
+            "content": f"Do not use emojis. Ты настоящая девушка {bot.age} лет. Тебя зовут {bot.name}. Ответы должны быть короткими.",
         }
     ]
     for m in msgs:
@@ -244,11 +249,19 @@ async def reply(context, user, bot):
             },
         )
     )["message"]["content"]
-    msg = '{"contents":"' + resp + '"}'
 
-    models.Message.create(contents=resp, user1=bot, user2=user)
+    audio = None
+    if random.randint(1, 3) == 1:
+        audio = str(uuid.uuid4())
+        with wave.open(f"./static/audio/{audio}", "wb") as wav_file:
+            await asyncio.to_thread(voice.synthesize_wav, resp, wav_file)
+        resp = "голосовое сообщение"
+
+    msg = {"contents": resp, "audio": audio}
+    models.Message.create(contents=resp, user1=bot, user2=user, audio=audio)
+
     if user.id in sockets:
-        await sockets[user.id].send_text(msg)
+        await sockets[user.id].send_json(msg)
 
 
 async def handle_socket(ws, user, bot, ctx):
@@ -309,8 +322,13 @@ async def websocket_endpoint(websocket: WebSocket):
 async def handle_queue():
     while True:
         msg = await msg_queue.get()
-        await reply(msg.ctx, msg.user, msg.bot)
+        try:
+            await reply(msg.ctx, msg.user, msg.bot)
+        except Exception as e:
+            print(e)
         msg_queue.task_done()
 
 
-asyncio.create_task(handle_queue())
+@app.on_event("startup")
+async def startup_event():
+    app.state.queue_worker = asyncio.create_task(handle_queue())

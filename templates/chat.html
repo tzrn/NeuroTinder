@@ -21,7 +21,13 @@
                 {% else %}
                 <b style="color:darkmagenta">вы:</b>
                 {% endif %}
+
                 {{m.contents}}
+                {% if m.audio %}
+                <audio controls>
+                    <source src="/static/audio/{{m.audio}}" type="audio/wav">
+                </audio>
+                {% endif %}
             </p>
             {% endfor %}
         </div>
@@ -55,15 +61,21 @@
         }
         connect()
 
-        function message(contents, isuser) {
+        function message(m, isuser) {
+            audio = ""
+            if (m.audio) {
+                audio = `<audio controls>
+                    <source src="/static/audio/${m.audio}" type="audio/wav">
+                </audio>`
+            }
             return `<p>${isuser ? "<b style=\"color:darkmagenta\">вы</b>" : `<b style="color:crimson">${botname}</b>`
-                }: ${contents}</p >`
+                }: ${m.contents}${audio}</p >`
         }
 
         messages = $('messages')
         ws.onmessage = (event) => {
             j = JSON.parse(event.data)
-            messages.innerHTML += message(j.contents, false)
+            messages.innerHTML += message(j, false)
             messages.scrollTop = messages.scrollHeight;
         };
 
@@ -72,7 +84,7 @@
             ws.send(JSON.stringify({
                 "contents": msginput.value
             }))
-            messages.innerHTML += message(msginput.value, true)
+            messages.innerHTML += message({ "contents": msginput.value }, true)
             msginput.value = ''
             messages.scrollTop = messages.scrollHeight;
         });
