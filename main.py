@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from pydantic import StringConstraints
+from dataclasses import dataclass
 from typing import Annotated
 
 import ollama
@@ -12,7 +13,8 @@ import secrets
 import json
 import models
 import uuid
-
+import peewee
+import asyncio
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -37,7 +39,7 @@ def auth(cookies):
 
 @app.get("/")
 async def root():
-    return redir_login
+    return RedirectResponse(url="/home", status_code=302)
 
 
 @app.post("/login")
@@ -90,7 +92,7 @@ async def register(
 
 
 @app.get("/home")
-async def read_item(
+async def home(
     request: Request, page: int = Query(1, ge=1), limit: int = Query(3, ge=1, le=5)
 ):
     user = auth(request.cookies)
@@ -117,6 +119,54 @@ async def read_item(
             "bots": bots[:limit],
             "page": page,
             "has_more": len(bots) == limit + 1,
+        },
+    )
+
+
+@app.get("/chats")
+async def chats(
+    request: Request, page: int = Query(1, ge=1), limit: int = Query(3, ge=1, le=5)
+):
+    user = auth(request.cookies)
+    if not user:
+        return redir_login
+
+    bot_case = (
+        peewee.Case(
+            None,
+            [
+                (models.Message.user1 == user, models.Message.user2),
+                (models.Message.user2 == user, models.Message.user1),
+            ],
+        ),
+    )
+
+    sq = (
+        models.Message.select(peewee.fn.MAX(models.Message.id).alias("max_id"))
+        .where((models.Message.user1 == user) | (models.Message.user2 == user))
+        .group_by(bot_case)
+    )
+    print(len(sq.dicts()))
+
+    chats = (
+        models.Message.select(models.User, models.Message)
+        .join(sq, on=(models.Message.id == sq.c.max_id))
+        .join(models.User, on=(models.User.id == bot_case))
+        .order_by(-models.Message.id)
+        .limit(limit + 1)
+        .offset((page - 1) * limit)
+        .dicts()
+    )
+
+    print(len(chats))
+
+    return templates.TemplateResponse(
+        request=request,
+        name="chats.html",
+        context={
+            "chats": chats[:limit],
+            "page": page,
+            "has_more": len(chats) == limit + 1,
         },
     )
 
@@ -170,22 +220,35 @@ async def chat(request: Request, username: str):
 
 
 sockets = {}
+msg_queue = asyncio.Queue()
 
 
-async def reply(ws, context, user, bot):
-    resp = ollama.chat(
-        model="qwen3.5:2b-q4_K_M",
-        messages=context,
-        think=False,
-        options={
-            "num_predict": 30,
-            "num_ctx": 512,
-            "temperature": 0.1,
-        },
+@dataclass
+class msg_data:
+    ctx: list[str]
+    user: models.User
+    bot: models.User
+
+
+async def reply(context, user, bot):
+    resp = (
+        await asyncio.to_thread(
+            ollama.chat,
+            model="qwen3.5:2b-q4_K_M",
+            messages=context,
+            think=False,
+            options={
+                "num_predict": 30,
+                "num_ctx": 512,
+                "temperature": 0.1,
+            },
+        )
     )["message"]["content"]
     msg = '{"contents":"' + resp + '"}'
+
     models.Message.create(contents=resp, user1=bot, user2=user)
-    await ws.send_text(msg)
+    if user.id in sockets:
+        await sockets[user.id].send_text(msg)
 
 
 async def handle_socket(ws, user, bot, ctx):
@@ -211,7 +274,7 @@ async def handle_socket(ws, user, bot, ctx):
         await sockets[bot.id].send_json({"contents": contents})
 
     if bot.isbot:
-        await reply(ws, ctx, user, bot)
+        await msg_queue.put(msg_data(ctx, user, bot))
 
 
 @app.websocket("/chatws")
@@ -241,3 +304,13 @@ async def websocket_endpoint(websocket: WebSocket):
             print("deleting connection")
             del sockets[user.id]
             return
+
+
+async def handle_queue():
+    while True:
+        msg = await msg_queue.get()
+        await reply(msg.ctx, msg.user, msg.bot)
+        msg_queue.task_done()
+
+
+asyncio.create_task(handle_queue())

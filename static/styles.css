@@ -88,3 +88,20 @@ body {
     margin: auto;
     max-width: 200px;
 }
+
+.chats {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    max-width: 400px;
+}
+
+.chat_item {
+    display: flex;
+    flex-direction: row;
+    height: fit-content;
+    padding: 10px;
+    background-color: #FFFFFFBB;
+    border: 3px solid lightgrey;
+    border-radius: 10px;
+}

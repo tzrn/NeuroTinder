@@ -27,6 +27,7 @@ class Message(Model):
     user1 = pw.ForeignKeyField(User)
     user2 = pw.ForeignKeyField(User)
     timestamp = pw.DateTimeField(default=datetime.datetime.now, index=True)
+    read = pw.BooleanField(default=False)
 
 
 db.connect()
