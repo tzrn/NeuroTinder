@@ -337,8 +337,8 @@ def get_random_chat():
     # Пишем только пользователям которые онлайн
     if len(sockets) == 0:
         return None
-
-    user = models.User.get_or_none(models.User.id == random.choice(list(sockets)))
+    userid = random.choice(list(sockets))
+    user = models.User.get_or_none(models.User.id == userid)
 
     if random.randint(1, 3) == 1:
         bot = (
@@ -374,8 +374,8 @@ async def produce_messages():
         if msg_queue.qsize() == 0:
             try:
                 chat = get_random_chat()
-            except Exception as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
             if chat is not None:
                 print(f"messaging {chat.user.name}")
                 await msg_queue.put(chat)
