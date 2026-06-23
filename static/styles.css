@@ -110,3 +110,7 @@ body {
     border: 3px solid lightgrey;
     border-radius: 10px;
 }
+
+.bell {
+    width: 20px;
+}

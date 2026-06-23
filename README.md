@@ -17,7 +17,7 @@ uv run gallery-dl --range "1-1000" -o directory="" -d ./static/img/pfp "https://
 ollama serve
 ollama pull qwen3.5:2b-q4_K_M
 ```
-- что бы работал TTS нужно скачать ru_RU-irina-medium.onnx и ru_RU-irina-medium.onnx.json из https://huggingface.co/rhasspy/piper-voices/tree/main/ru/ru_RU/irina/medium в папку models
+- что бы работал TTS нужно скачать ru_RU-irina-medium.onnx и ru_RU-irina-medium.onnx.json из https://huggingface.co/rhasspy/piper-voices/tree/main/ru/ru_RU/irina/medium в папку models и создать папку static/audio
 
 - запуск:
 ```bash
@@ -27,5 +27,4 @@ uv run fastapi dev
 ```
 
 # TODO:
-- Показывать по одной карточке с возможностью выбора.
-- Бот может начать/продолжить первым.
+- Уведомления о сообщениях

@@ -16,3 +16,23 @@ function del_cookie(name) {
 function $(id) {
     return document.getElementById(id)
 }
+
+function wsconnect(onmsg) {
+    ws = new WebSocket("/chatws");
+    ws.onopen = () => {
+        console.log("соединение установленно")
+    };
+
+    ws.onmessage = onmsg
+
+    ws.onclose = () => {
+        setTimeout(() => {
+            console.log("Попытка восстановить соединение...")
+            wsconnect(onmsg)
+        }, 2000)
+    }
+
+    ws.onerror = (err) => {
+        ws.close();
+    };
+}

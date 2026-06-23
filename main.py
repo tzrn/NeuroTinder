@@ -16,6 +16,7 @@ import uuid
 import peewee
 import asyncio
 import random
+import traceback
 
 from piper import PiperVoice
 import wave
@@ -60,7 +61,6 @@ async def login(
 
     session = secrets.token_urlsafe(32)
     user.session = session
-    user.save()
 
     response = RedirectResponse(url="/home", status_code=302)
     response.set_cookie(key="username", value=username)
@@ -113,7 +113,6 @@ async def home(
         .limit(limit + 1)
         .offset((page - 1) * limit)
     )
-    print(bots)
 
     return templates.TemplateResponse(
         request=request,
@@ -151,24 +150,33 @@ async def chats(
         .where((models.Message.user1 == user) | (models.Message.user2 == user))
         .group_by(bot_case)
     )
-    print(len(sq.dicts()))
+
+    read_case = peewee.Case(
+        None,
+        [
+            (models.Message.user1 == user, 1),
+        ],
+        default=models.Message.read,
+    )
 
     chats = (
-        models.Message.select(models.User, models.Message)
+        models.Message.select(models.User, models.Message, read_case.alias("isread"))
         .join(sq, on=(models.Message.id == sq.c.max_id))
         .join(models.User, on=(models.User.id == bot_case))
-        .order_by(-models.Message.id)
+        .order_by(
+            read_case,
+            -models.Message.id,
+        )
         .limit(limit + 1)
         .offset((page - 1) * limit)
         .dicts()
     )
 
-    print(len(chats))
-
     return templates.TemplateResponse(
         request=request,
         name="chats.html",
         context={
+            "user": user,
             "chats": chats[:limit],
             "page": page,
             "has_more": len(chats) == limit + 1,
@@ -215,6 +223,12 @@ async def chat(request: Request, username: str):
     if not bot:
         return error("Пользователь не найден")
 
+    models.Message.update(read=1).where(
+        (models.Message.read == 0)
+        & (models.Message.user1 == bot)
+        & (models.Message.user2 == user)
+    ).execute()
+
     messages = get_messages(user, bot)
 
     return templates.TemplateResponse(
@@ -244,7 +258,7 @@ async def reply(context, user, bot):
             think=False,
             options={
                 "num_predict": 30,
-                "num_ctx": 512,
+                "num_ctx": 64,
                 "temperature": 0.1,
             },
         )
@@ -264,18 +278,26 @@ async def reply(context, user, bot):
         await sockets[user.id].send_json(msg)
 
 
-async def handle_socket(ws, user, bot, ctx):
+async def handle_socket(ws, user):
     data = await ws.receive_text()
     try:
         j = json.loads(data)
     except json.decoder.JSONDecodeError:
         return
 
-    if "contents" not in j:
+    if "contents" not in j or "bot" not in j:
+        return
+
+    bot = models.User.get_or_none(models.User.name == j["bot"])
+    if not bot:
+        ws.send_text(error("пользователь не найден"))
+        ws.close()
         return
 
     contents = j["contents"]
     models.Message.create(contents=contents, user1=user, user2=bot)
+
+    ctx = context(user, bot)
     ctx.append(
         {
             "role": "user",
@@ -301,22 +323,40 @@ async def websocket_endpoint(websocket: WebSocket):
         return
     sockets[user.id] = websocket
 
-    bot_username = await websocket.receive_text()
-    bot = models.User.get_or_none(models.User.name == bot_username)
-    if not bot:
-        websocket.send_text(error("пользователь не найден"))
-        websocket.close()
-        return
-
-    ctx = context(user, bot)
-
     while True:
         try:
-            await handle_socket(websocket, user, bot, ctx)
-        except:
+            await handle_socket(websocket, user)
+        except Exception as e:
+            traceback.print_exc()
             print("deleting connection")
             del sockets[user.id]
             return
+
+
+def get_random_chat():
+    # Пишем только пользователям которые онлайн
+    if len(sockets) == 0:
+        return None
+
+    user = models.User.get_or_none(models.User.id == random.choice(list(sockets)))
+
+    if random.randint(1, 3) == 1:
+        bot = (
+            models.Message.select()
+            .where((models.Message.user1 == user))
+            .order_by(models.db.random())
+            .limit(1)[0]
+            .user2
+        )
+    else:
+        bot = (
+            models.User.select()
+            .where(models.User.isbot is True)
+            .order_by(models.db.random())
+            .limit(1)[0]
+        )
+
+    return msg_data(context(user, bot), user, bot)
 
 
 async def handle_queue():
@@ -329,6 +369,20 @@ async def handle_queue():
         msg_queue.task_done()
 
 
+async def produce_messages():
+    while True:
+        if msg_queue.qsize() == 0:
+            try:
+                chat = get_random_chat()
+            except Exception as e:
+                print(e)
+            if chat is not None:
+                print(f"messaging {chat.user.name}")
+                await msg_queue.put(chat)
+        await asyncio.sleep(20)
+
+
 @app.on_event("startup")
 async def startup_event():
     app.state.queue_worker = asyncio.create_task(handle_queue())
+    app.state.producer = asyncio.create_task(produce_messages())

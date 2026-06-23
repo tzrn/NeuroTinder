@@ -10,7 +10,10 @@
     <div class="chat">
         <div class="header">
             <img class="smallpfp" src="/static/img/pfp/{{bot.pfp}}">
-            <h1 style="flex:1">{{bot.name}}</h1>
+            <div style="flex:1">
+                <h1>{{bot.name}}</h1>
+                <a href="/chats">все чаты</a>
+            </div>
         </div>
 
         <div id="messages" class="messages">
@@ -42,25 +45,6 @@
     <script>
         botname = "{{bot.name}}"
 
-        function connect() {
-            ws = new WebSocket("/chatws");
-            ws.onopen = () => {
-                ws.send(botname);
-            };
-
-            ws.onclose = () => {
-                setTimeout(() => {
-                    console.log("Попытка восстановить соединение...")
-                    connect()
-                }, 2000)
-            }
-
-            ws.onerror = (err) => {
-                ws.close();
-            };
-        }
-        connect()
-
         function message(m, isuser) {
             audio = ""
             if (m.audio) {
@@ -72,22 +56,24 @@
                 }: ${m.contents}${audio}</p >`
         }
 
-        messages = $('messages')
-        ws.onmessage = (event) => {
+        wsconnect((event) => {
             j = JSON.parse(event.data)
             messages.innerHTML += message(j, false)
             messages.scrollTop = messages.scrollHeight;
-        };
+        })
 
+        messages = $('messages')
         $('msgform').addEventListener('submit', function (e) {
             e.preventDefault();
             ws.send(JSON.stringify({
-                "contents": msginput.value
+                "contents": msginput.value,
+                "bot": botname
             }))
             messages.innerHTML += message({ "contents": msginput.value }, true)
             msginput.value = ''
             messages.scrollTop = messages.scrollHeight;
         });
+        messages.scrollTop = messages.scrollHeight;
     </script>
 
 </body>
