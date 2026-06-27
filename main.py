@@ -61,6 +61,7 @@ async def login(
 
     session = secrets.token_urlsafe(32)
     user.session = session
+    user.save()
 
     response = RedirectResponse(url="/home", status_code=302)
     response.set_cookie(key="username", value=username)
