@@ -272,7 +272,7 @@ async def reply(context, user, bot):
             await asyncio.to_thread(voice.synthesize_wav, resp, wav_file)
         resp = "голосовое сообщение"
 
-    msg = {"contents": resp, "audio": audio}
+    msg = {"from": bot.name, "contents": resp, "audio": audio}
     models.Message.create(contents=resp, user1=bot, user2=user, audio=audio)
 
     if user.id in sockets:
@@ -341,18 +341,27 @@ def get_random_chat():
     userid = random.choice(list(sockets))
     user = models.User.get_or_none(models.User.id == userid)
 
-    if random.randint(1, 3) == 1:
+    bot = None
+    if random.randint(1, 4) == 1:
         bot = (
             models.Message.select()
-            .where((models.Message.user1 == user))
+            .where(
+                (models.Message.user1 == user) & (models.Message.user2.isbot == True)
+            )
+            .join(models.User, on=(models.User.id == models.Message.user1.id))
+            .group_by(models.Message.user2)
             .order_by(models.db.random())
-            .limit(1)[0]
-            .user2
+            .limit(1)
         )
-    else:
+        if len(bot) == 1:
+            bot = bot[0].user2
+        else:
+            bot = None
+
+    if bot is None:
         bot = (
             models.User.select()
-            .where(models.User.isbot is True)
+            .where(models.User.isbot == True)
             .order_by(models.db.random())
             .limit(1)[0]
         )
@@ -378,7 +387,7 @@ async def produce_messages():
             except Exception:
                 traceback.print_exc()
             if chat is not None:
-                print(f"messaging {chat.user.name}")
+                print(f"messaging {chat.user.name} as {chat.bot.name}")
                 await msg_queue.put(chat)
         await asyncio.sleep(20)
 

@@ -114,3 +114,18 @@ body {
 .bell {
     width: 20px;
 }
+
+#notifs {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+}
+
+.notif {
+    border: grey 2px solid;
+    border-radius: 10px;
+    background-color: #88FF88CC;
+    padding: 5px;
+    min-width: 200px;
+    max-width: 300px;
+}

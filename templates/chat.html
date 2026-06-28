@@ -56,8 +56,7 @@
                 }: ${m.contents}${audio}</p >`
         }
 
-        wsconnect((event) => {
-            j = JSON.parse(event.data)
+        wsconnect((j) => {
             messages.innerHTML += message(j, false)
             messages.scrollTop = messages.scrollHeight;
         })

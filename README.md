@@ -25,6 +25,3 @@ uv sync
 uv run gendata.py
 uv run fastapi dev
 ```
-
-# TODO:
-- Уведомления о сообщениях

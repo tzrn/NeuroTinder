@@ -23,7 +23,10 @@ function wsconnect(onmsg) {
         console.log("соединение установленно")
     };
 
-    ws.onmessage = onmsg
+    ws.onmessage = () => {
+        j = JSON.parse(event.data)
+        onmsg(j)
+    }
 
     ws.onclose = () => {
         setTimeout(() => {
@@ -35,4 +38,19 @@ function wsconnect(onmsg) {
     ws.onerror = (err) => {
         ws.close();
     };
+}
+
+function notify(header, value) {
+    notifs = $('notifs')
+    notif = document.createElement("div")
+    notif.classList.add("notif")
+    notif.innerHTML = `<p><b>${header}</b></p><p>${value}</p>`
+    notifs.appendChild(notif)
+    notifs.style.display = "block"
+    setTimeout(() => {
+        notif.remove()
+        if (notifs.childElementCount == 0) {
+            notifs.style.display = "none"
+        }
+    }, 5000)
 }

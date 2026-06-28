@@ -37,6 +37,9 @@
         </div>
     </div>
 
+    <div id="notifs">
+    </div>
+
     <script src="/static/js/tools.js"></script>
     <script>
         function logout() {
@@ -44,7 +47,10 @@
             del_cookie("session")
             window.location.href = "/";
         }
-        wsconnect(null)
+        wsconnect((j) => {
+            console.log(j)
+            notify(`Сообщение от ${j.from}`, j.contents.length > 50 ? j.contents.slice(0, 50) + "..." : j.contents)
+        })
     </script>
 </body>
 
