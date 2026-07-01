@@ -115,10 +115,13 @@ async def home(
         .offset((page - 1) * limit)
     )
 
+    hasnew = models.Message.get_or_none((models.Message.user2==user) & (models.Message.read==False)) is not None
+
     return templates.TemplateResponse(
         request=request,
         name="home.html",
         context={
+            "hasnew": hasnew,
             "username": user.name,
             "pfp": user.pfp,
             "bots": bots[:limit],
@@ -310,6 +313,7 @@ async def handle_socket(ws, user):
         await sockets[bot.id].send_json({"contents": contents})
 
     if bot.isbot:
+        print(f"queuing message for {user.name} from {bot.name} queue size {msg_queue.qsize()}")
         await msg_queue.put(msg_data(ctx, user, bot))
 
 
@@ -342,7 +346,7 @@ def get_random_chat():
     user = models.User.get_or_none(models.User.id == userid)
 
     bot = None
-    if random.randint(1, 4) == 1:
+    if random.randint(1, 4) > 1:
         bot = (
             models.Message.select()
             .where(
@@ -374,13 +378,14 @@ async def handle_queue():
         msg = await msg_queue.get()
         try:
             await reply(msg.ctx, msg.user, msg.bot)
-        except Exception as e:
-            print(e)
+        except Exception:
+            traceback.print_exc()
         msg_queue.task_done()
 
 
 async def produce_messages():
     while True:
+        await asyncio.sleep(5)
         if msg_queue.qsize() == 0:
             try:
                 chat = get_random_chat()
@@ -389,7 +394,8 @@ async def produce_messages():
             if chat is not None:
                 print(f"messaging {chat.user.name} as {chat.bot.name}")
                 await msg_queue.put(chat)
-        await asyncio.sleep(20)
+            else:
+                print("no connected users found")
 
 
 @app.on_event("startup")

@@ -40,8 +40,12 @@ function wsconnect(onmsg) {
     };
 }
 
+function msgnotify(data) {
+    notify(`Сообщение от <a href="/chat/${data.from}">${data.from}</a>`, data.contents.length > 50 ? data.contents.slice(0, 50) + "..." : data.contents)
+}
+
 function notify(header, value) {
-    notifs = $('notifs')
+    //notifs = $('notifs')
     notif = document.createElement("div")
     notif.classList.add("notif")
     notif.innerHTML = `<p><b>${header}</b></p><p>${value}</p>`
@@ -52,5 +56,9 @@ function notify(header, value) {
         if (notifs.childElementCount == 0) {
             notifs.style.display = "none"
         }
-    }, 5000)
+    }, 10000)
 }
+
+notifs = document.createElement("div")
+notifs.id = "notifs"
+document.body.appendChild(notifs)

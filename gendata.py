@@ -374,15 +374,15 @@ def bio(name, age):
         return random.choice(
             [
                 f"Привет! Я {name}.",
-                "Прветствую,",
+                "Прветствую.",
                 f"Мне {age}",
                 "Доброе утро.",
-                "",
                 "АААААААА",
                 "Добавь меня в Telegram.",
                 "Напиши мне.",
                 "Познокомимся?",
                 "Здравствуйте.",
+                "Салют."
             ]
         )
 
@@ -395,13 +395,12 @@ def bio(name, age):
                 "Увлекаюсь",
                 "Не могу устоять перед",
                 "Ненавижу",
-                "Генерирую",
-                "Делаю",
+                "Хочу",
             ]
         )
-        for i in range(random.randint(1, 5)):
+        for i in range(random.randint(0, 4)):
             s += " " + random.choice(hobbies) + ","
-        return s + "."
+        return s + " " + random.choice(hobbies) + "."
 
     def preference():
         s = random.choice(
@@ -412,9 +411,9 @@ def bio(name, age):
                 "Надеюсь ты хотя бы",
             ]
         )
-        for i in range(random.randint(1, 5)):
+        for i in range(random.randint(0, 4)):
             s += " " + random.choice(adjectives) + ","
-        return s + "."
+        return s + " " + random.choice(adjectives) + "."
 
     s = ""
     for i in range(random.randint(1, 2)):
@@ -448,7 +447,6 @@ def nickname():
                 "zz",
                 "404",
                 "0x",
-                "://",
                 "::",
                 "||",
                 "^^",

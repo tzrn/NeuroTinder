@@ -12,8 +12,12 @@
         <img class="smallpfp" style="height:50px;" src="/static/img/pfp/{{pfp}}">
         <div style="text-align: center; margin-right: 5px;">
             <p id="welcome">Привет, {{username}}</p>
-            <a href="/chats">Чаты</a>
-            <button onclick="logout()">Выход</button>
+            <div style="display:flex; justify-content: space-around; align-items: center;">
+                <img id="bell" style="display:{% if hasnew %}block{% else %}none{%endif%}" class=" bell"
+                    src='/static/img/bell.png'>
+                <a href="/chats">Чаты</a>
+                <button onclick="logout()">Выход</button>
+            </div>
         </div>
     </div>
 
@@ -37,9 +41,6 @@
         </div>
     </div>
 
-    <div id="notifs">
-    </div>
-
     <script src="/static/js/tools.js"></script>
     <script>
         function logout() {
@@ -47,9 +48,9 @@
             del_cookie("session")
             window.location.href = "/";
         }
-        wsconnect((j) => {
-            console.log(j)
-            notify(`Сообщение от ${j.from}`, j.contents.length > 50 ? j.contents.slice(0, 50) + "..." : j.contents)
+        wsconnect(j => {
+            msgnotify(j)
+            $('bell').style.display = "block"
         })
     </script>
 </body>

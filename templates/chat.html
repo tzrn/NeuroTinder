@@ -57,8 +57,12 @@
         }
 
         wsconnect((j) => {
-            messages.innerHTML += message(j, false)
-            messages.scrollTop = messages.scrollHeight;
+            if (j.from == botname) {
+                messages.innerHTML += message(j, false)
+                messages.scrollTop = messages.scrollHeight;
+            } else {
+                msgnotify(j)
+            }
         })
 
         messages = $('messages')
