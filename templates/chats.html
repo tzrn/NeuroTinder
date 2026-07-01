@@ -22,7 +22,11 @@
                     <p><b>
                             {% if not chat.isread %}<img class="bell" src='/static/img/bell.png'>{%endif%}
                             {{chat.name}}</b></p>
+                    {%if chat.audio%}
+                    голосовое сообщение
+                    {%else%}
                     <p class="line-clamp">{{chat.contents}}</p>
+                    {%endif%}
                 </div>
             </div>
         </a>
