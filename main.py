@@ -99,21 +99,23 @@ async def register(
 
 @app.get("/home")
 async def home(
-    request: Request, page: int = Query(1, ge=1), limit: int = Query(3, ge=1, le=5)
+    request: Request, page: int = Query(None, ge=1), limit: int = Query(3, ge=1, le=5)
 ):
     user = auth(request.cookies)
     if not user:
         return redir_login
 
-    bots = list(
+    botsq = (
         models.User.select()
         .where(models.User.isbot)
         .where(
             (models.User.age > user.prefagefrom) & (models.User.age < user.prefageto)
         )
-        .limit(limit + 1)
-        .offset((page - 1) * limit)
     )
+
+    if page is None:
+        page = random.randint(1,len(botsq)//limit)
+    bots=botsq.limit(limit + 1).offset((page - 1) * limit)
 
     hasnew = models.Message.get_or_none((models.Message.user2==user) & (models.Message.read==False)) is not None
 
