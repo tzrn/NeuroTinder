@@ -7,7 +7,7 @@
 
 # использование:
 - должны быть установленны ollama (https://ollama.com/download/) и uv (https://docs.astral.sh/uv/getting-started/installation/)
-- `uv venv` что бы создать среду pyhton
+- `uv venv` что бы создать среду python
 - Что бы скачать аватарки для ботов
 ```bash
 uv pip install gallery-dl
