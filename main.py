@@ -273,11 +273,10 @@ async def reply(context, user, bot):
         audio = str(uuid.uuid4())
         with wave.open(f"./static/audio/{audio}", "wb") as wav_file:
             await asyncio.to_thread(voice.synthesize_wav, resp, wav_file)
-        resp = "голосовое сообщение"
 
     msg = {"from": bot.name, "contents": resp, "audio": audio}
     models.Message.create(contents=resp, user1=bot, user2=user, audio=audio)
-
+    
     if user.id in sockets:
         await sockets[user.id].send_json(msg)
 
@@ -313,7 +312,6 @@ async def handle_socket(ws, user):
         await sockets[bot.id].send_json({"contents": contents})
 
     if bot.isbot:
-        print(f"queuing message for {user.name} from {bot.name} queue size {msg_queue.qsize()}")
         await msg_queue.put(msg_data(ctx, user, bot))
 
 
@@ -386,7 +384,7 @@ async def handle_queue():
 async def produce_messages():
     while True:
         await asyncio.sleep(5)
-        if msg_queue.qsize() == 0:
+        if msg_queue._finished.is_set():
             try:
                 chat = get_random_chat()
             except Exception:

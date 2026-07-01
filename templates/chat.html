@@ -25,11 +25,12 @@
                 <b style="color:darkmagenta">вы:</b>
                 {% endif %}
 
-                {{m.contents}}
                 {% if m.audio %}
-                <audio controls>
+                голосовое сообщение<audio controls>
                     <source src="/static/audio/{{m.audio}}" type="audio/wav">
                 </audio>
+                {% else %}
+                {{ m.contents }}
                 {% endif %}
             </p>
             {% endfor %}
@@ -46,14 +47,14 @@
         botname = "{{bot.name}}"
 
         function message(m, isuser) {
-            audio = ""
+            msg = `<p>${isuser ? "<b style=\"color:darkmagenta\">вы</b>" : `<b style="color:crimson">${botname}</b>`}: `
+
             if (m.audio) {
-                audio = `<audio controls>
-                    <source src="/static/audio/${m.audio}" type="audio/wav">
+                return msg + `голосовое сообщение<audio controls>
+                <source src="/static/audio/${m.audio}" type="audio/wav">
                 </audio>`
             }
-            return `<p>${isuser ? "<b style=\"color:darkmagenta\">вы</b>" : `<b style="color:crimson">${botname}</b>`
-                }: ${m.contents}${audio}</p >`
+            return msg + m.contents
         }
 
         wsconnect((j) => {

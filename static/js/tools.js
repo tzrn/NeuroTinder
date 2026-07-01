@@ -41,7 +41,15 @@ function wsconnect(onmsg) {
 }
 
 function msgnotify(data) {
-    notify(`Сообщение от <a href="/chat/${data.from}">${data.from}</a>`, data.contents.length > 50 ? data.contents.slice(0, 50) + "..." : data.contents)
+    console.log(data)
+    if (data.audio) {
+        c = `голосовое сообщение<audio controls>
+                    <source src="/static/audio/${data.audio}" type="audio/wav">
+                </audio>`
+    } else {
+        c = data.contents.length > 50 ? data.contents.slice(0, 50) + "..." : data.contents
+    }
+    notify(`Сообщение от <a href="/chat/${data.from}">${data.from}</a>`, c)
 }
 
 function notify(header, value) {
