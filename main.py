@@ -132,6 +132,18 @@ async def home(
         },
     )
 
+@app.get("/markread")
+async def markread(request: Request):
+    user = auth(request.cookies)
+    if not user:
+        return redir_login
+    
+    models.Message.update(read=1).where(
+        (models.Message.read == 0)
+        & (models.Message.user2 == user)
+    ).execute()
+
+    return RedirectResponse(url="/chats", status_code=302)
 
 @app.get("/chats")
 async def chats(

@@ -41,7 +41,6 @@ function wsconnect(onmsg) {
 }
 
 function msgnotify(data) {
-    console.log(data)
     if (data.audio) {
         c = `голосовое сообщение<audio controls>
                     <source src="/static/audio/${data.audio}" type="audio/wav">
@@ -54,17 +53,32 @@ function msgnotify(data) {
 
 function notify(header, value) {
     //notifs = $('notifs')
-    notif = document.createElement("div")
+    let notif = document.createElement("div")
     notif.classList.add("notif")
-    notif.innerHTML = `<p><b>${header}</b></p><p>${value}</p>`
-    notifs.appendChild(notif)
-    notifs.style.display = "block"
-    setTimeout(() => {
+
+    let closebtn = document.createElement("button")
+    closebtn.innerHTML = "убрать"
+    closebtn.onclick = () => {
         notif.remove()
-        if (notifs.childElementCount == 0) {
-            notifs.style.display = "none"
+    }
+
+    notif.innerHTML = `<p><b>${header}</b></p><p>${value}</p>`
+    notif.appendChild(closebtn)
+    notifs.appendChild(notif)
+
+    let timeout = 10000
+    let rm = () => {
+        if (!notif) {
+            return
         }
-    }, 10000)
+        let audio = notif.querySelector("audio")
+        if (audio && audio.currentTime != 0 && !audio.ended) {
+            setTimeout(rm, timeout)
+        } else {
+            notif.remove()
+        }
+    }
+    setTimeout(rm, timeout)
 }
 
 notifs = document.createElement("div")
